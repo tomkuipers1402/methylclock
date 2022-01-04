@@ -36,10 +36,10 @@ DNAmAge <- function(x,
                     cell.count.reference = "blood gse35069 complete",
                     min.perc = 0.8,
                     ...) {
-  available.clocks <- c("Horvath", "Hannum", "Levine", "BNN", "skinHorvath", "PedBE", "Wu", "TL", "all")
+  available.clocks <- c("Horvath", "Hannum", "Levine", "BNN", "skinHorvath", "PedBE", "Wu", "TL", "Zhang", "all")
   method <- match(clocks, available.clocks)
   if (any(is.na(method))) {
-    stop("You wrote the name of an unavailable clock: Horvath, Hannum, Levine, BNN, skinHorvath, PedBE, Wu, TL")
+    stop("You wrote the name of an unavailable clock: Horvath, Hannum, Levine, BNN, skinHorvath, PedBE, Wu, Zhang, TL")
   }
   if (length(available.clocks) %in% method) {
     method <- c(1:(length(available.clocks) - 1))
@@ -85,7 +85,8 @@ DNAmAge <- function(x,
     coefSkin$CpGmarker,
     coefPedBE$CpGmarker,
     coefWu$CpGmarker,
-    coefTL$CpGmarker
+    coefTL$CpGmarker,
+    coefZhang$CpGmarker
   )
 
   cpgs.in <- intersect(cpgs.all, colnames(cpgs))
@@ -196,6 +197,14 @@ DNAmAge <- function(x,
       TL = tl
     )
   }
+  
+  if (9 %in% method) {
+    zhang <- predAge(cpgs.imp, coefZhang, intercept = TRUE, min.perc)
+    Zhang <- data.frame(
+      id = rownames(cpgs.imp),
+      Zhang = zhang
+    )
+  }
 
   if (!missing(age)) {
     if (!cell.count) {
@@ -222,6 +231,9 @@ DNAmAge <- function(x,
       }
       if (8 %in% method) {
         TL <- ageAcc1(TL, age, lab = "TL")
+      }
+      if (9 %in% method) {
+        Zhang <- ageAcc1(Zhang, age, lab = "Zhang")
       }
     }
     else {
@@ -259,6 +271,9 @@ DNAmAge <- function(x,
         }
         if (8 %in% method) {
           TL <- ageAcc2(TL, df, lab = "TL")
+        }
+        if (9 %in% method) {
+          Zhang <- ageAcc2(Zhang, df, lab = "Zhang")
         }
       }
     }
@@ -318,6 +333,13 @@ DNAmAge <- function(x,
       out <- TL
     } else{
       out <- out %>% full_join(TL, by = "id")
+    }
+  }
+  if (9 %in% method) {
+    if(is.null(out)) {
+      out <- Zhang
+    } else{
+      out <- out %>% full_join(Zhang, by = "id")
     }
   }
 
